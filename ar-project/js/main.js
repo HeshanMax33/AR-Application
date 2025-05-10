@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Variables to track state
     let isRevving = false;
     let isExpanded = false;
+    let autoRotate = true;
+    let userInteracted = false;
     
     // Remove loading screen when everything is loaded
     window.addEventListener('load', function() {
@@ -28,6 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Log when model is loaded or fails
     carModel.addEventListener('model-loaded', function() {
         console.log('Model loaded successfully!');
+        
+        // Show a success notification
+        showNotification('Model loaded successfully!');
     });
     
     carModel.addEventListener('model-error', function(e) {
@@ -79,12 +84,44 @@ document.addEventListener('DOMContentLoaded', function() {
         particleSystem.setAttribute('particle-system', 'enabled', false);
     });
     
+    // Function to show notification
+    function showNotification(message) {
+        // Create notification element if it doesn't exist
+        let notification = document.querySelector('.success-notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.className = 'success-notification';
+            document.body.appendChild(notification);
+        }
+        
+        // Set notification message
+        notification.textContent = message;
+        
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show-notification');
+            setTimeout(() => {
+                notification.classList.remove('show-notification');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }, 10);
+    }
+    
     // Add click interaction to car model
     carModel.addEventListener('click', function(event) {
         console.log('Car clicked!');
         
         // Prevent event bubbling
-        event.stopPropagation();
+        if (event) {
+            event.stopPropagation();
+        }
+        
+        // Flag that user has interacted
+        userInteracted = true;
         
         // Toggle exhaust effect visibility
         const isVisible = exhaustEffect.getAttribute('visible');
@@ -96,16 +133,30 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Trigger pulse animation if showing
         if (!isVisible) {
-            exhaustEffect.querySelector('a-sphere').emit('showEffect');
+            const sphere = exhaustEffect.querySelector('a-sphere');
+            if (sphere) {
+                sphere.emit('showEffect');
+            }
         }
         
         // Toggle engine sound
         const sound = carModel.components.sound;
         if (sound) {
             if (!isRevving) {
-                sound.playSound();
+                try {
+                    sound.playSound();
+                    showNotification('Engine started!');
+                } catch (e) {
+                    console.error('Failed to play sound:', e);
+                    showNotification('Sound playback failed. Try tapping again.');
+                }
             } else {
-                sound.pauseSound();
+                try {
+                    sound.pauseSound();
+                    showNotification('Engine stopped!');
+                } catch (e) {
+                    console.error('Failed to pause sound:', e);
+                }
             }
             isRevving = !isRevving;
         }
@@ -116,8 +167,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Double-click detected
             if (!isExpanded) {
                 carModel.setAttribute('scale', '1 1 1');
+                showNotification('Model enlarged!');
             } else {
                 carModel.setAttribute('scale', '0.5 0.5 0.5');
+                showNotification('Model returned to normal size!');
             }
             isExpanded = !isExpanded;
         }
@@ -129,9 +182,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Prevent default behavior to avoid scrolling
         e.preventDefault();
         
-        // Trigger click event
-        const clickEvent = new Event('click');
-        carModel.dispatchEvent(clickEvent);
+        // Flag that user has interacted
+        userInteracted = true;
     });
     
     // Optional: Add keyboard controls for testing on desktop
@@ -140,26 +192,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Simulate clicking the car
             const clickEvent = new Event('click');
             carModel.dispatchEvent(clickEvent);
+        } else if (e.key === 'r' || e.key === 'R') {
+            // Toggle auto-rotation
+            autoRotate = !autoRotate;
+            if (autoRotate) {
+                carModel.setAttribute('rotate-model', {speed: 1});
+                showNotification('Auto-rotation enabled');
+            } else {
+                carModel.removeAttribute('rotate-model');
+                showNotification('Auto-rotation disabled');
+            }
         }
     });
-    
-    // Add device orientation handling for better mobile experience
-    if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', function(event) {
-            // Only react to significant orientation changes
-            if (carMarker.object3D.visible && event.beta && event.gamma) {
-                // Subtle tilt effect based on device orientation
-                // Limited effect to not interfere with marker tracking
-                const tiltX = Math.min(Math.max(event.beta - 45, -10), 10) * 0.1;
-                const tiltY = Math.min(Math.max(event.gamma, -10), 10) * 0.1;
-                
-                // Apply subtle tilt to the car container
-                carContainer.setAttribute('rotation', {
-                    x: tiltX,
-                    y: tiltY, 
-                    z: 0
-                });
-            }
-        }, true);
-    }
 });
