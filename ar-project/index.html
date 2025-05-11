@@ -10,132 +10,11 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://unpkg.com/aframe-particle-system-component@1.0.9/dist/aframe-particle-system-component.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
-    
-    <!-- Add rotation controls script -->
-    <script>
-        // Component to make an entity rotate smoothly around its Y-axis
-        AFRAME.registerComponent('rotate-model', {
-            schema: {
-                speed: {type: 'number', default: 1}
-            },
-            
-            init: function() {
-                this.rotation = 0;
-            },
-            
-            tick: function(time, deltaTime) {
-                if (!deltaTime) return;
-                
-                // Convert deltaTime from ms to seconds and calculate rotation change
-                this.rotation += this.data.speed * (deltaTime / 1000);
-                
-                // Apply rotation to the entity
-                this.el.setAttribute('rotation', {
-                    x: 0,
-                    y: this.rotation * 30, // Adjust speed by multiplying
-                    z: 0
-                });
-            }
-        });
-        
-        // Component to handle drag rotation on both desktop and mobile
-        AFRAME.registerComponent('drag-rotate-component', {
-            schema: { 
-                speed: { default: 2 }
-            },
-            init: function() {
-                this.ifMouseDown = false;
-                this.x_cord = 0;
-                this.y_cord = 0;
-                this.yaw = 0;
-                this.pitch = 0;
-                
-                this.model = this.el;
-                
-                // Desktop events
-                document.addEventListener('mousedown', this.OnDocumentMouseDown.bind(this));
-                document.addEventListener('mousemove', this.OnDocumentMouseMove.bind(this));
-                document.addEventListener('mouseup', this.OnDocumentMouseUp.bind(this));
-                
-                // Mobile touch events
-                document.addEventListener('touchstart', this.OnDocumentTouchStart.bind(this));
-                document.addEventListener('touchmove', this.OnDocumentTouchMove.bind(this));
-                document.addEventListener('touchend', this.OnDocumentTouchEnd.bind(this));
-            },
-            
-            OnDocumentMouseDown: function(event) {
-                if (!this.model.object3D.visible) return;
-                this.ifMouseDown = true;
-                this.x_cord = event.clientX;
-                this.y_cord = event.clientY;
-            },
-            
-            OnDocumentMouseMove: function(event) {
-                if (!this.ifMouseDown) return;
-                
-                var temp_x = event.clientX - this.x_cord;
-                var temp_y = event.clientY - this.y_cord;
-                
-                this.yaw += temp_x * this.data.speed * 0.1;
-                this.pitch += temp_y * this.data.speed * 0.1;
-                
-                // Limit pitch to avoid flipping
-                this.pitch = Math.max(-80, Math.min(80, this.pitch));
-                
-                this.model.setAttribute('rotation', {
-                    x: this.pitch,
-                    y: this.yaw,
-                    z: 0
-                });
-                
-                this.x_cord = event.clientX;
-                this.y_cord = event.clientY;
-            },
-            
-            OnDocumentMouseUp: function(event) {
-                this.ifMouseDown = false;
-            },
-            
-            OnDocumentTouchStart: function(event) {
-                if (!this.model.object3D.visible) return;
-                this.ifMouseDown = true;
-                this.x_cord = event.touches[0].clientX;
-                this.y_cord = event.touches[0].clientY;
-            },
-            
-            OnDocumentTouchMove: function(event) {
-                if (!this.ifMouseDown) return;
-                
-                var temp_x = event.touches[0].clientX - this.x_cord;
-                var temp_y = event.touches[0].clientY - this.y_cord;
-                
-                this.yaw += temp_x * this.data.speed * 0.1;
-                this.pitch += temp_y * this.data.speed * 0.1;
-                
-                // Limit pitch to avoid flipping
-                this.pitch = Math.max(-80, Math.min(80, this.pitch));
-                
-                this.model.setAttribute('rotation', {
-                    x: this.pitch,
-                    y: this.yaw,
-                    z: 0
-                });
-                
-                this.x_cord = event.touches[0].clientX;
-                this.y_cord = event.touches[0].clientY;
-            },
-            
-            OnDocumentTouchEnd: function(event) {
-                this.ifMouseDown = false;
-            }
-        });
-    </script>
 </head>
 <body style="margin: 0; overflow: hidden;">
     <!-- Simple info overlay -->
     <div id="info" style="position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; font-family: Arial, sans-serif; z-index: 100; display: none;">
-        Tap on model to trigger effects<br>
-        Drag to rotate model
+        Tap on model to trigger effects
     </div>
 
     <!-- Loading screen -->
@@ -161,17 +40,18 @@
             <!-- Parent entity to group the car and effects -->
             <a-entity 
                 id="car-container" 
-                position="0 0 0" 
-                animation="property: position; from: 0 0 0; to: 0 0.1 0; dir: alternate; dur: 2000; loop: true;">
+                position="0 0.1 0" 
+                animation="property: position; from: 0 0.1 0; to: 0 0.2 0; dir: alternate; dur: 2000; loop: true; easing: easeInOutQuad">
                 
-                <!-- McLaren P1 model with animations and rotation control -->
+                <!-- McLaren P1 model with animations -->
                 <a-entity
                     id="car-model"
                     class="clickable"
-                    position="0 0.1 0"
+                    position="0 0 0"
+                    rotation="0 0 0"
                     scale="0.5 0.5 0.5"
                     gltf-model="assets/models/free_mclaren_p1_gtr.glb"
-                    drag-rotate-component="speed: 2"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
                     sound="src: #engine-sound; autoplay: false; loop: true; volume: 0.8;"
                     animation__click="property: scale; startEvents: click; from: 0.5 0.5 0.5; to: 0.55 0.55 0.55; dur: 300; dir: alternate; loop: 3">
                 </a-entity>
