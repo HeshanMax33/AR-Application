@@ -1,22 +1,15 @@
-/* style.css */
-body {
+/* Global styles */
+* {
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    box-sizing: border-box;
     font-family: Arial, sans-serif;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
 }
 
-.a-enter-vr {
-    display: none;
-}
-
-#loading-screen {
+/* Loading screen */
+.loading-screen {
     position: fixed;
+    z-index: 999;
     top: 0;
     left: 0;
     width: 100%;
@@ -25,71 +18,111 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
-    color: white;
-    flex-direction: column;
+    transition: opacity 0.5s ease-in-out;
 }
 
-.loader-container {
+.loading-content {
     text-align: center;
+    color: white;
+}
+
+.loading-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #ff8c00;
+    text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
 }
 
 .loader {
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #ff4e00;
+    width: 70px;
+    height: 70px;
+    border: 5px solid rgba(255, 140, 0, 0.3);
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px auto;
+    border-top-color: #ff8c00;
+    margin: 1rem auto;
+    animation: spin 1s ease-in-out infinite;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-#instructions {
+/* Instructions overlay */
+.instructions {
     position: fixed;
+    z-index: 998;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     background-color: rgba(0, 0, 0, 0.7);
     color: white;
-    padding: 15px;
-    border-radius: 8px;
+    padding: 15px 20px;
+    border-radius: 10px;
     text-align: center;
-    z-index: 100;
-    max-width: 80%;
+    max-width: 90%;
 }
 
-#instructions button {
-    background-color: #ff4e00;
+.instructions p {
+    margin-bottom: 10px;
+}
+
+#startButton {
+    background-color: #ff8c00;
     color: white;
     border: none;
     padding: 8px 16px;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
-    margin-top: 10px;
-    touch-action: manipulation;
+    font-weight: bold;
+    transition: background-color 0.3s;
 }
 
-#controls {
+#startButton:hover {
+    background-color: #ff4500;
+}
+
+/* Animation for model appearance */
+@keyframes scaleUp {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.scale-up {
+    animation: scaleUp 1s ease-out;
+}
+
+/* Hide AR.js info */
+.a-enter-vr {
+    display: none !important;
+}
+
+/* Button for interactive elements */
+.ar-button {
     position: fixed;
-    top: 20px;
+    bottom: 20px;
     right: 20px;
-    z-index: 100;
-}
-
-#controls button {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(255, 140, 0, 0.7);
     color: white;
     border: none;
-    width: 40px;
-    height: 40px;
+    padding: 10px 15px;
     border-radius: 50%;
-    margin-left: 10px;
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
     cursor: pointer;
-    font-size: 18px;
-    touch-action: manipulation;
+    display: none;
+    z-index: 997;
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.5);
+}
+
+.ar-button:active {
+    background-color: rgba(255, 69, 0, 0.7);
 }
