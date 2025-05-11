@@ -4,47 +4,62 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dragon AR Experience</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="./css/style.css">
     <!-- AR.js and Three.js libraries -->
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.4.2/dist/aframe-master.min.js"></script>
+    <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
 </head>
 <body>
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-container">
             <h1>Dragon AR Experience</h1>
-            <div class="loading-spinner"></div>
-            <p>Loading AR Experience...</p>
-            <p class="instructions">Point your camera at the marker to see the dragon come to life!</p>
+            <p>Loading resources...</p>
+            <div class="progress-bar">
+                <div class="progress" id="loadingProgress"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="instructions" id="instructions">
+        <div class="instructions-container">
+            <h2>How to use:</h2>
+            <p>1. Allow camera access</p>
+            <p>2. Point your camera at the marker image</p>
+            <p>3. Watch the dragon come to life!</p>
+            <button id="startButton">Start Experience</button>
         </div>
     </div>
 
-    <div class="controls">
-        <button id="soundToggle" class="control-btn">🔊</button>
-        <button id="rotateModel" class="control-btn">🔄</button>
-        <button id="scaleUp" class="control-btn">➕</button>
-        <button id="scaleDown" class="control-btn">➖</button>
-    </div>
-
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-             renderer="logarithmicDepthBuffer: true; precision: medium;" vr-mode-ui="enabled: false">
+    <!-- AR Scene (Initially hidden) -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true;"
+        vr-mode-ui="enabled: false"
+        id="arScene"
+        style="display: none;">
         
-        <!-- Custom Dragon entity with animation and sound -->
-        <a-entity id="dragonModel" position="0 0 0" scale="0.5 0.5 0.5" rotation="0 0 0" visible="false"
-                  animation-mixer="clip: idle; loop: true; timeScale: 1">
-            <a-sound id="roarSound" src="src: url(assets/audio/dragon-roar.mp3)" autoplay="false" loop="false" position="0 0 0"></a-sound>
-        </a-entity>
-        
-        <!-- Define the marker -->
-        <a-marker id="dragonMarker" type="pattern" url="assets/markers/marker1.patt" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01">
-            <!-- The 3D model will be attached here by JS -->
+        <!-- Camera with Marker Detection -->
+        <a-marker id="dragonMarker" type="pattern" url="./assets/markers/marker1.patt">
+            <!-- 3D Model -->
+            <a-entity
+                id="dragonModel"
+                position="0 0 0"
+                rotation="0 0 0"
+                scale="1 1 1"
+                gltf-model="./assets/models/black_dragon_with_idle_animation.glb"
+                animation-mixer="clip: idle">
+            </a-entity>
         </a-marker>
 
-        <!-- Static camera entity -->
+        <!-- Camera -->
         <a-entity camera></a-entity>
     </a-scene>
 
-    <script src="js/main.js"></script>
+    <!-- Audio Element -->
+    <audio id="dragonRoar" src="./assets/audio/dragon-roar.mp3" preload="auto"></audio>
+
+    <script src="./js/main.js"></script>
 </body>
 </html>
