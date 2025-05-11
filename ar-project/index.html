@@ -1,80 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dragon World AR Experience</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <title>Dragon World AR</title>
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Include all required libraries with specific versions -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-content">
-            <h1>Dragon World AR</h1>
-            <div class="loader"></div>
-            <p>Loading your magical experience...</p>
-        </div>
+    <div id="loading">
+        <h1>Dragon World AR</h1>
+        <div class="spinner"></div>
+        <p>Loading your magical experience...</p>
     </div>
     
-    <div class="instructions" id="instructions">
-        <p>Point your camera at the AR marker to see the dragon come to life!</p>
-        <button id="startButton">Start Experience</button>
-    </div>
-
-    <a-scene 
-        embedded
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-        renderer="logarithmicDepthBuffer: true; precision: medium;"
-        vr-mode-ui="enabled: false"
-        id="scene"
-        loading-screen="enabled: false"
-    >
-        <!-- Camera -->
-        <a-entity camera></a-entity>
+    <!-- Audio elements -->
+    <audio id="dragonRoar" src="assets/audio/dragon-roar.mp3" preload="auto"></audio>
+    
+    <!-- A-Frame Scene -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true;">
+        <!-- Assets management system -->
+        <a-assets>
+            <a-asset-item id="dragon-model" src="assets/models/black_dragon_with_idle_animation.glb"></a-asset-item>
+        </a-assets>
         
-        <!-- Dragon marker -->
-        <a-marker
-            id="dragon-marker"
-            type="pattern"
-            url="assets/markers/marker1.png"
-            raycaster="objects: .clickable"
-            emitevents="true"
-            cursor="fuse: false; rayOrigin: mouse;"
-            smooth="true"
-            smoothCount="10"
-            smoothTolerance="0.01"
-            smoothThreshold="5"
-        >
-            <!-- Dragon model -->
+        <!-- Marker definition -->
+        <a-marker type="pattern" url="assets/markers/marker1.patt" id="dragon-marker" emitevents="true">
+            <!-- 3D Model -->
             <a-entity
-                id="dragon-model"
-                gltf-model="assets/models/black_dragon_with_idle_animation.glb"
                 position="0 0 0"
-                rotation="0 0 0"
-                scale="0.5 0.5 0.5"
-                animation-mixer="clip: *; loop: repeat; timeScale: 1"
-                class="clickable"
-                dragon-interaction
-            >
-                <!-- Particle system for fire effect -->
-                <a-entity
-                    id="fire-particles"
-                    position="0 1 0.5"
-                    particle-system="preset: dust; particleCount: 100; color: #ff4500, #ff8c00, #ffff00; size: 0.5; maxAge: 1; velocityValue: 0.2 0.2 0.2; enabled: false"
-                ></a-entity>
+                rotation="-90 0 0"
+                scale="0.05 0.05 0.05"
+                gltf-model="#dragon-model"
+                animation-mixer="clip: *; loop: repeat">
+            </a-entity>
+            
+            <!-- Particles for fire effect -->
+            <a-entity id="fire-particles" position="0 0.5 0" visible="false">
+                <a-entity id="fire" particle-system="preset: fire; color: #ff3300,#ffaa00; size: 0.5; particleCount: 50; blending: additive; opacity: 0.8"></a-entity>
             </a-entity>
         </a-marker>
-
-        <!-- Scene lighting -->
-        <a-entity light="type: ambient; color: #BBB; intensity: 0.5"></a-entity>
-        <a-entity light="type: directional; color: #FFF; intensity: 0.8" position="-1 1 0"></a-entity>
+        
+        <!-- Camera -->
+        <a-entity camera></a-entity>
     </a-scene>
-
-    <!-- Sound effects -->
-    <audio id="dragon-roar" src="assets/audio/dragon-roar.mp3"></audio>
-
+    
     <script src="js/main.js"></script>
 </body>
 </html>
