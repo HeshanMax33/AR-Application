@@ -8,16 +8,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const carContainer = document.querySelector('#car-container');
     const infoElement = document.querySelector('#info');
     const loadingScreen = document.querySelector('#loading-screen');
+    const controlButtons = document.querySelector('#control-buttons');
+    const rotateLeftBtn = document.querySelector('#rotate-left');
+    const rotateRightBtn = document.querySelector('#rotate-right');
+    const toggleAutoRotateBtn = document.querySelector('#toggle-auto-rotate');
     
     // Variables to track state
     let isRevving = false;
     let isExpanded = false;
+    let autoRotate = true;
+    let currentRotation = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
     
     // Remove loading screen when everything is loaded
     window.addEventListener('load', function() {
         setTimeout(function() {
             loadingScreen.style.display = 'none';
-            // Show a success notification
             showNotification("AR experience loaded successfully!");
         }, 2000);
     });
@@ -25,19 +32,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Log when model is loaded or fails
     carModel.addEventListener('model-loaded', function() {
         console.log('Model loaded successfully!');
+        // Start auto-rotation
+        carModel.emit('autoRotate');
     });
     
     carModel.addEventListener('model-error', function(e) {
         console.error('Model failed to load:', e);
-        // Show a more visible error message to the user
         showError('Failed to load 3D model. Please check your connection and try again.');
     });
     
     // Add marker detection events
     carMarker.addEventListener('markerFound', function() {
         console.log('Marker detected!');
-        // Show info text
+        // Show info text and controls
         infoElement.style.display = 'block';
+        controlButtons.style.display = 'block';
         
         // Reset car position and animations when marker is found
         carContainer.setAttribute('position', '0 0.1 0');
@@ -53,12 +62,21 @@ document.addEventListener('DOMContentLoaded', function() {
             dur: 800,
             easing: 'easeOutElastic'
         });
+        
+        // Resume auto-rotation if enabled
+        if (autoRotate) {
+            carModel.emit('autoRotate');
+        }
     });
     
     carMarker.addEventListener('markerLost', function() {
         console.log('Marker lost!');
-        // Hide info text
+        // Hide info text and controls
         infoElement.style.display = 'none';
+        controlButtons.style.display = 'none';
+        
+        // Pause auto-rotation
+        carModel.emit('pauseRotate');
         
         // Stop sound if playing
         if (isRevving) {
@@ -74,6 +92,75 @@ document.addEventListener('DOMContentLoaded', function() {
         particleSystem.setAttribute('visible', false);
         particleSystem.setAttribute('particle-system', 'enabled', false);
     });
+    
+    // Button controls for rotation
+    rotateLeftBtn.addEventListener('click', function() {
+        // Pause auto-rotation
+        autoRotate = false;
+        carModel.emit('pauseRotate');
+        
+        // Manually rotate the model left
+        currentRotation = (currentRotation - 30) % 360;
+        carModel.setAttribute('rotation', `0 ${currentRotation} 0`);
+        toggleAutoRotateBtn.textContent = "Auto ▶";
+    });
+    
+    rotateRightBtn.addEventListener('click', function() {
+        // Pause auto-rotation
+        autoRotate = false;
+        carModel.emit('pauseRotate');
+        
+        // Manually rotate the model right
+        currentRotation = (currentRotation + 30) % 360;
+        carModel.setAttribute('rotation', `0 ${currentRotation} 0`);
+        toggleAutoRotateBtn.textContent = "Auto ▶";
+    });
+    
+    toggleAutoRotateBtn.addEventListener('click', function() {
+        autoRotate = !autoRotate;
+        if (autoRotate) {
+            carModel.emit('autoRotate');
+            toggleAutoRotateBtn.textContent = "Auto ⏸";
+        } else {
+            carModel.emit('pauseRotate');
+            toggleAutoRotateBtn.textContent = "Auto ▶";
+        }
+    });
+    
+    // Add touch swipe to rotate the model
+    document.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+    });
+    
+    document.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].clientX;
+        handleSwipe();
+    });
+    
+    function handleSwipe() {
+        // Check if marker is visible
+        if (carMarker.object3D.visible) {
+            // Calculate swipe distance
+            const swipeDistance = touchEndX - touchStartX;
+            if (Math.abs(swipeDistance) > 50) {
+                // Pause auto-rotation
+                autoRotate = false;
+                carModel.emit('pauseRotate');
+                toggleAutoRotateBtn.textContent = "Auto ▶";
+                
+                // Rotate model based on swipe direction
+                if (swipeDistance > 0) {
+                    // Swipe right
+                    currentRotation = (currentRotation + 15) % 360;
+                } else {
+                    // Swipe left
+                    currentRotation = (currentRotation - 15) % 360;
+                }
+                
+                carModel.setAttribute('rotation', `0 ${currentRotation} 0`);
+            }
+        }
+    }
     
     // Add click interaction to car model
     carModel.addEventListener('click', function(event) {
@@ -136,10 +223,36 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Optional: Add keyboard controls for testing on desktop
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'p' || e.key === 'P') {
-            // Simulate clicking the car
-            const clickEvent = new Event('click');
-            carModel.dispatchEvent(clickEvent);
+        if (carMarker.object3D.visible) {
+            if (e.key === 'p' || e.key === 'P') {
+                // Simulate clicking the car
+                const clickEvent = new Event('click');
+                carModel.dispatchEvent(clickEvent);
+            } else if (e.key === 'ArrowLeft') {
+                // Rotate left
+                autoRotate = false;
+                carModel.emit('pauseRotate');
+                currentRotation = (currentRotation - 15) % 360;
+                carModel.setAttribute('rotation', `0 ${currentRotation} 0`);
+                toggleAutoRotateBtn.textContent = "Auto ▶";
+            } else if (e.key === 'ArrowRight') {
+                // Rotate right
+                autoRotate = false;
+                carModel.emit('pauseRotate');
+                currentRotation = (currentRotation + 15) % 360;
+                carModel.setAttribute('rotation', `0 ${currentRotation} 0`);
+                toggleAutoRotateBtn.textContent = "Auto ▶";
+            } else if (e.key === 'a' || e.key === 'A') {
+                // Toggle auto-rotation
+                autoRotate = !autoRotate;
+                if (autoRotate) {
+                    carModel.emit('autoRotate');
+                    toggleAutoRotateBtn.textContent = "Auto ⏸";
+                } else {
+                    carModel.emit('pauseRotate');
+                    toggleAutoRotateBtn.textContent = "Auto ▶";
+                }
+            }
         }
     });
     
@@ -189,4 +302,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500);
         }, 5000);
     }
-});
+})
